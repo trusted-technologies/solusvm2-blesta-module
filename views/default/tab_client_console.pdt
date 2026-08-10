@@ -17,7 +17,7 @@
     <div class="row">
         <div class="col-md-12">
             <?php if (!empty($console->ws_url)) { ?>
-            <script src="https://cdn.jsdelivr.net/npm/@novnc/novnc@1.5.0/dist/novnc-min.js" crossorigin="anonymous"></script>
+            <script src="<?php echo $this->Html->safe($this->view_dir . 'js/novnc-bundle.js'); ?>"></script>
             <script type="text/javascript">
                 $(document).ready(function () {
                     let url = <?php echo json_encode($console->ws_url); ?>;
