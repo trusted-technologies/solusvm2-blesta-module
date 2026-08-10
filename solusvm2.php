@@ -1589,26 +1589,15 @@ class Solusvm2 extends Module
         // Get the service fields
         $service_fields = $this->serviceFieldsToObject($service->fields);
         $module_row = $this->getModuleRow(($package->module_row ?? '0'));
+        $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
 
         $this->view->set('module_row', $module_row);
         $this->view->set('package', $package);
         $this->view->set('service', $service);
         $this->view->set('service_fields', $service_fields);
-        $this->view->set('stats', $this->getServerStats($service_fields, $module_row));
+        $this->view->set('stats', $this->getServerStats($service_fields, $module_row, $server));
 
-        return $this->view->fetch();
-    }
-
-    /**
-     * Returns HTML content to display in the default service management view
-     *
-     * @param stdClass $package A stdClass object representing the selected package
-     * @param stdClass $service A stdClass object representing the current service
-     * @return string HTML content to display on the service management page
-     */
-    public function getClientManagementContent($package, $service)
-    {
-        return $this->getServiceActionsView($service, $package, true);
+        return $this->view->fetch() . $this->getServiceActionsView($service, $package, $server, true);
     }
 
     /**
@@ -1664,9 +1653,13 @@ class Solusvm2 extends Module
     private function getServiceActionsView($service, $package, $server = null, $client = true)
     {
         $view_name = $client ? 'client_service_actions' : 'admin_service_actions';
-        $view = new View($view_name, 'default');
-        $view->base_uri = $this->base_uri;
-        $view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
+
+        // Preserve the caller's view so we can safely reuse $this->view for helpers
+        $previous_view = $this->view ?? null;
+
+        $this->view = new View($view_name, 'default');
+        $this->view->base_uri = $this->base_uri;
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
 
         // Load the helpers required for this view
         Loader::loadHelpers($this, ['Form', 'Html']);
@@ -1678,15 +1671,18 @@ class Solusvm2 extends Module
             $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
         }
 
-        $view->set('status', ($server->status ?? null));
-        $view->set('service_fields', $service_fields);
-        $view->set('service_id', $service->id);
-        $view->set('client_id', $service->client_id);
-        $view->set('vars', (object)[
+        $this->view->set('status', ($server->status ?? null));
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('service_id', $service->id);
+        $this->view->set('client_id', $service->client_id);
+        $this->view->set('vars', (object)[
             'hostname' => ($service_fields->solusvm2_hostname ?? null)
         ]);
 
-        return $view->fetch();
+        $output = $this->view->fetch();
+        $this->view = $previous_view;
+
+        return $output;
     }
 
     /**
