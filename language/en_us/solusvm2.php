@@ -117,9 +117,11 @@ $lang['Solusvm2.!bytes.value'] = '%1$s %2$s';
 $lang['Solusvm2.tab_actions'] = 'Actions';
 $lang['Solusvm2.tab_console'] = 'Console';
 $lang['Solusvm2.tab_boot'] = 'Boot & Rescue';
+$lang['Solusvm2.tab_reinstall'] = 'Reinstall';
 $lang['Solusvm2.tab_client_actions'] = 'Actions';
 $lang['Solusvm2.tab_client_console'] = 'Console';
 $lang['Solusvm2.tab_client_boot'] = 'Boot & Rescue';
+$lang['Solusvm2.tab_client_reinstall'] = 'Reinstall';
 
 // Admin Actions tab
 $lang['Solusvm2.tab_actions.heading_actions'] = 'Actions';
@@ -247,3 +249,41 @@ $lang['Solusvm2.tab_client_boot.field_password_submit'] = 'Reset Root Password';
 
 // Boot & Rescue success message
 $lang['Solusvm2.!success.boot_mode'] = 'Boot mode updated successfully.';
+
+// Admin Reinstall tab
+$lang['Solusvm2.tab_reinstall.heading_server_type'] = 'Server Type';
+$lang['Solusvm2.tab_reinstall.tab_os'] = 'Operating Systems';
+$lang['Solusvm2.tab_reinstall.tab_application'] = 'Applications';
+$lang['Solusvm2.tab_reinstall.heading_password'] = 'Operating System Password';
+$lang['Solusvm2.tab_reinstall.field_reset_password'] = 'Reset password';
+$lang['Solusvm2.tab_reinstall.heading_ssh_keys'] = 'SSH Keys';
+$lang['Solusvm2.tab_reinstall.heading_add_ssh_key'] = 'Add Public SSH Key';
+$lang['Solusvm2.tab_reinstall.field_ssh_key_name'] = 'Name';
+$lang['Solusvm2.tab_reinstall.field_ssh_key_public_key'] = 'Public Key';
+$lang['Solusvm2.tab_reinstall.field_ssh_key_add'] = 'Add Public SSH Key';
+$lang['Solusvm2.tab_reinstall.heading_user_data'] = 'User Data';
+$lang['Solusvm2.tab_reinstall.text_user_data'] = 'Optional cloud-init user data to apply during reinstallation.';
+$lang['Solusvm2.tab_reinstall.field_confirm'] = 'I confirm that I want to reinstall this server. All data will be lost.';
+$lang['Solusvm2.tab_reinstall.field_reinstall_submit'] = 'Reinstall';
+
+// Client Reinstall tab
+$lang['Solusvm2.tab_client_reinstall.heading_server_type'] = 'Server Type';
+$lang['Solusvm2.tab_client_reinstall.tab_os'] = 'Operating Systems';
+$lang['Solusvm2.tab_client_reinstall.tab_application'] = 'Applications';
+$lang['Solusvm2.tab_client_reinstall.heading_password'] = 'Operating System Password';
+$lang['Solusvm2.tab_client_reinstall.field_reset_password'] = 'Reset password';
+$lang['Solusvm2.tab_client_reinstall.heading_ssh_keys'] = 'SSH Keys';
+$lang['Solusvm2.tab_client_reinstall.heading_add_ssh_key'] = 'Add Public SSH Key';
+$lang['Solusvm2.tab_client_reinstall.field_ssh_key_name'] = 'Name';
+$lang['Solusvm2.tab_client_reinstall.field_ssh_key_public_key'] = 'Public Key';
+$lang['Solusvm2.tab_client_reinstall.field_ssh_key_add'] = 'Add Public SSH Key';
+$lang['Solusvm2.tab_client_reinstall.heading_user_data'] = 'User Data';
+$lang['Solusvm2.tab_client_reinstall.text_user_data'] = 'Optional cloud-init user data to apply during reinstallation.';
+$lang['Solusvm2.tab_client_reinstall.field_confirm'] = 'I confirm that I want to reinstall this server. All data will be lost.';
+$lang['Solusvm2.tab_client_reinstall.field_reinstall_submit'] = 'Reinstall';
+
+// SSH key errors
+$lang['Solusvm2.!error.ssh_key_name.empty'] = 'Please enter an SSH key name.';
+$lang['Solusvm2.!error.ssh_key_public_key.empty'] = 'Please enter the public key.';
+$lang['Solusvm2.!error.ssh_key_public_key.format'] = 'The public key does not appear to be a valid SSH public key.';
+$lang['Solusvm2.!success.ssh_key_added'] = 'The SSH key was added successfully.';

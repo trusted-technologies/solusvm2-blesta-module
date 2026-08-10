@@ -1,0 +1,140 @@
+<?php /** @var View $this **/ ?>
+
+<h6 class="form-section-header"><?php $this->_('Solusvm2.tab_reinstall.heading_server_type'); ?></h6>
+
+<ul class="nav nav-tabs mb-3" id="solusvm2-reinstall-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link<?php echo empty($vars->server_type) || $vars->server_type != 'application' ? ' active' : ''; ?>"
+           id="solusvm2-reinstall-os-tab" data-toggle="tab" href="#solusvm2-reinstall-os" role="tab"
+           aria-controls="solusvm2-reinstall-os" aria-selected="true">
+            <?php $this->_('Solusvm2.tab_reinstall.tab_os'); ?>
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link<?php echo !empty($vars->server_type) && $vars->server_type == 'application' ? ' active' : ''; ?>"
+           id="solusvm2-reinstall-app-tab" data-toggle="tab" href="#solusvm2-reinstall-app" role="tab"
+           aria-controls="solusvm2-reinstall-app" aria-selected="false">
+            <?php $this->_('Solusvm2.tab_reinstall.tab_application'); ?>
+        </a>
+    </li>
+</ul>
+
+<?php
+$this->Form->create($this->base_uri . 'clients/service/tab/' . ($service_id ?? '') . '/tabReinstall/');
+?>
+<input type="hidden" name="action" value="reinstall">
+<input type="hidden" name="server_type" id="solusvm2_reinstall_server_type" value="<?php echo $this->Html->safe($vars->server_type ?? 'os'); ?>">
+
+<div class="tab-content" id="solusvm2-reinstall-tab-content">
+    <div class="tab-pane fade<?php echo empty($vars->server_type) || $vars->server_type != 'application' ? ' show active' : ''; ?>"
+         id="solusvm2-reinstall-os" role="tabpanel" aria-labelledby="solusvm2-reinstall-os-tab">
+        <div class="row">
+            <?php foreach ($os_images as $id => $name) { ?>
+                <div class="col-md-4 mb-3">
+                    <label class="card h-100 mb-0 solusvm2-reinstall-card<?php echo isset($vars->os) && $vars->os == $id ? ' border-primary' : ''; ?>">
+                        <div class="card-body">
+                            <input type="radio" name="os" value="<?php echo (int)$id; ?>"
+                                <?php echo isset($vars->os) && $vars->os == $id ? ' checked' : ''; ?>
+                                   class="mr-2 solusvm2-reinstall-radio">
+                            <?php echo $this->Html->safe($name); ?>
+                        </div>
+                    </label>
+                </div>
+            <?php } ?>
+        </div>
+    </div>
+
+    <div class="tab-pane fade<?php echo !empty($vars->server_type) && $vars->server_type == 'application' ? ' show active' : ''; ?>"
+         id="solusvm2-reinstall-app" role="tabpanel" aria-labelledby="solusvm2-reinstall-app-tab">
+        <div class="row">
+            <?php foreach ($applications as $id => $name) { ?>
+                <div class="col-md-4 mb-3">
+                    <label class="card h-100 mb-0 solusvm2-reinstall-card<?php echo isset($vars->application) && $vars->application == $id ? ' border-primary' : ''; ?>">
+                        <div class="card-body">
+                            <input type="radio" name="application" value="<?php echo (int)$id; ?>"
+                                <?php echo isset($vars->application) && $vars->application == $id ? ' checked' : ''; ?>
+                                   class="mr-2 solusvm2-reinstall-radio">
+                            <?php echo $this->Html->safe($name); ?>
+                        </div>
+                    </label>
+                </div>
+            <?php } ?>
+        </div>
+    </div>
+</div>
+
+<h6 class="form-section-header mt-4"><?php $this->_('Solusvm2.tab_reinstall.heading_password'); ?></h6>
+<div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" name="reset_password" value="1" id="solusvm2_reset_password">
+    <label class="form-check-label" for="solusvm2_reset_password">
+        <?php $this->_('Solusvm2.tab_reinstall.field_reset_password'); ?>
+    </label>
+</div>
+
+<h6 class="form-section-header"><?php $this->_('Solusvm2.tab_reinstall.heading_ssh_keys'); ?></h6>
+<?php if (!empty($ssh_keys)) { ?>
+    <div class="mb-3">
+        <?php foreach ($ssh_keys as $id => $name) { ?>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="ssh_keys[]" value="<?php echo (int)$id; ?>"
+                       id="solusvm2_ssh_key_<?php echo (int)$id; ?>"
+                    <?php echo !empty($vars->ssh_keys) && in_array($id, (array)$vars->ssh_keys) ? ' checked' : ''; ?>>
+                <label class="form-check-label" for="solusvm2_ssh_key_<?php echo (int)$id; ?>">
+                    <?php echo $this->Html->safe($name); ?>
+                </label>
+            </div>
+        <?php } ?>
+    </div>
+<?php } ?>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h6 class="card-title"><?php $this->_('Solusvm2.tab_reinstall.heading_add_ssh_key'); ?></h6>
+        <div class="form-group">
+            <label for="solusvm2_ssh_key_name"><?php $this->_('Solusvm2.tab_reinstall.field_ssh_key_name'); ?></label>
+            <input type="text" class="form-control" id="solusvm2_ssh_key_name" name="ssh_key_name"
+                   value="<?php echo $this->Html->safe($vars->ssh_key_name ?? ''); ?>">
+        </div>
+        <div class="form-group">
+            <label for="solusvm2_ssh_key_public_key"><?php $this->_('Solusvm2.tab_reinstall.field_ssh_key_public_key'); ?></label>
+            <textarea class="form-control" id="solusvm2_ssh_key_public_key" name="ssh_key_public_key" rows="3"><?php echo $this->Html->safe($vars->ssh_key_public_key ?? ''); ?></textarea>
+        </div>
+        <button type="submit" name="action" value="add_ssh_key" class="btn btn-secondary">
+            <?php $this->_('Solusvm2.tab_reinstall.field_ssh_key_add'); ?>
+        </button>
+    </div>
+</div>
+
+<h6 class="form-section-header"><?php $this->_('Solusvm2.tab_reinstall.heading_user_data'); ?></h6>
+<div class="form-group">
+    <textarea class="form-control" name="user_data" rows="5"><?php echo $this->Html->safe($vars->user_data ?? ''); ?></textarea>
+    <small class="form-text text-muted"><?php $this->_('Solusvm2.tab_reinstall.text_user_data'); ?></small>
+</div>
+
+<div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" name="confirm" value="1" id="solusvm2_reinstall_confirm"
+        <?php echo !empty($vars->confirm) ? ' checked' : ''; ?>>
+    <label class="form-check-label" for="solusvm2_reinstall_confirm">
+        <?php $this->_('Solusvm2.tab_reinstall.field_confirm'); ?>
+    </label>
+</div>
+
+<button type="submit" class="btn btn-primary">
+    <?php $this->_('Solusvm2.tab_reinstall.field_reinstall_submit'); ?>
+</button>
+
+<?php $this->Form->end(); ?>
+
+<script>
+    $(document).ready(function () {
+        var typeField = $('#solusvm2_reinstall_server_type');
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            typeField.val($(e.target).attr('href') === '#solusvm2-reinstall-app' ? 'application' : 'os');
+        });
+
+        $('.solusvm2-reinstall-card').on('click', function () {
+            $(this).closest('.tab-pane').find('.solusvm2-reinstall-card').removeClass('border-primary');
+            $(this).addClass('border-primary');
+        });
+    });
+</script>

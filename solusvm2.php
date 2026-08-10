@@ -395,8 +395,14 @@ class Solusvm2 extends Module
                     $data = ['os' => (int)$vars['solusvm2_os']];
                 }
 
-                if (!empty($package->meta->user_data)) {
+                if (!empty($vars['solusvm2_user_data'])) {
+                    $data['user_data'] = str_replace("\r\n", "\n", $vars['solusvm2_user_data']);
+                } elseif (!empty($package->meta->user_data)) {
                     $data['user_data'] = str_replace("\r\n", "\n", $package->meta->user_data);
+                }
+
+                if (!empty($vars['solusvm2_ssh_keys']) && is_array($vars['solusvm2_ssh_keys'])) {
+                    $data['ssh_keys'] = array_values(array_filter(array_map('intval', $vars['solusvm2_ssh_keys'])));
                 }
 
                 $this->log($row->meta->host . '|servers/' . $server_id . '/reinstall', serialize($data), 'input', true);
@@ -1605,6 +1611,7 @@ class Solusvm2 extends Module
         return [
             'tabActions' => Language::_('Solusvm2.tab_actions', true),
             'tabBoot' => Language::_('Solusvm2.tab_boot', true),
+            'tabReinstall' => Language::_('Solusvm2.tab_reinstall', true),
             'tabConsole' => Language::_('Solusvm2.tab_console', true)
         ];
     }
@@ -1626,6 +1633,10 @@ class Solusvm2 extends Module
             'tabClientBoot' => [
                 'name' => Language::_('Solusvm2.tab_client_boot', true),
                 'icon' => 'fas fa-life-ring'
+            ],
+            'tabClientReinstall' => [
+                'name' => Language::_('Solusvm2.tab_client_reinstall', true),
+                'icon' => 'fas fa-sync-alt'
             ],
             'tabClientConsole' => [
                 'name' => Language::_('Solusvm2.tab_client_console', true),
@@ -2154,6 +2165,205 @@ class Solusvm2 extends Module
         $this->view->set('boot', $boot);
         $this->view->set('iso_images', $iso_images);
         $this->view->set('service_fields', $service_fields);
+        $this->view->set('client_id', $service->client_id);
+        $this->view->set('service_id', $service->id);
+
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
+        return $this->view;
+    }
+
+    /**
+     * Reinstall tab (OS/application selection, password reset, SSH keys, user data)
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param array $files Any FILES parameters
+     * @return string The string representing the contents of this tab
+     */
+    public function tabReinstall($package, $service, array $get = null, array $post = null, array $files = null)
+    {
+        $view = $this->reinstallTab($package, $service, false, $post);
+        return $view->fetch();
+    }
+
+    /**
+     * Client Reinstall tab
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param array $files Any FILES parameters
+     * @return string The string representing the contents of this tab
+     */
+    public function tabClientReinstall($package, $service, array $get = null, array $post = null, array $files = null)
+    {
+        $view = $this->reinstallTab($package, $service, true, $post);
+        return $view->fetch();
+    }
+
+    /**
+     * Builds the data for the admin/client Reinstall tabs
+     * @see Solusvm2::tabReinstall() and Solusvm2::tabClientReinstall()
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param bool $client True if the tab is rendered for the client area, false otherwise
+     * @param array $post Any POST parameters
+     * @return View A template view to be rendered
+     */
+    private function reinstallTab($package, $service, $client = false, array $post = null)
+    {
+        $template = ($client ? 'tab_client_reinstall' : 'tab_reinstall');
+
+        $this->view = new View($template, 'default');
+
+        // Load the helpers required for this view
+        Loader::loadHelpers($this, ['Form', 'Html']);
+
+        // Get the service fields
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        $module_row = $this->getModuleRow($package->module_row);
+
+        $server_id = ($service_fields->solusvm2_server_id ?? null);
+        $os_images = [];
+        $applications = [];
+        $ssh_keys = [];
+        $vars = [];
+
+        if ($module_row) {
+            $os_images = $this->getOsImages($module_row);
+            $applications = $this->getApplications($module_row);
+
+            if ($server_id) {
+                $api = $this->getApi($module_row->meta->host, $module_row->meta->api_token);
+
+                // Fetch SSH keys
+                $this->log($module_row->meta->host . '|ssh_keys', serialize([]), 'input', true);
+                $ssh_response = $this->parseResponse($api->listSshKeys(), $module_row);
+                if (!$this->Input->errors() && !empty($ssh_response['data'])) {
+                    foreach ($ssh_response['data'] as $key) {
+                        $ssh_keys[$key['id']] = ($key['name'] ?? $key['public_key']);
+                    }
+                }
+            }
+        }
+
+        // Add a new SSH key
+        if (!empty($post['action']) && $post['action'] == 'add_ssh_key' && $server_id && $module_row) {
+            $rules = [
+                'ssh_key_name' => [
+                    'empty' => [
+                        'rule' => ['isEmpty'],
+                        'negate' => true,
+                        'message' => Language::_('Solusvm2.!error.ssh_key_name.empty', true)
+                    ]
+                ],
+                'ssh_key_public_key' => [
+                    'empty' => [
+                        'rule' => ['isEmpty'],
+                        'negate' => true,
+                        'message' => Language::_('Solusvm2.!error.ssh_key_public_key.empty', true)
+                    ],
+                    'format' => [
+                        'rule' => [[$this, 'validateSshPublicKey']],
+                        'message' => Language::_('Solusvm2.!error.ssh_key_public_key.format', true)
+                    ]
+                ]
+            ];
+
+            $this->Input->setRules($rules);
+            if ($this->Input->validates($post)) {
+                $api = $this->getApi($module_row->meta->host, $module_row->meta->api_token);
+                $this->log(
+                    $module_row->meta->host . '|ssh_keys (create)',
+                    serialize(['name' => $post['ssh_key_name']]),
+                    'input',
+                    true
+                );
+                $this->parseResponse(
+                    $api->createSshKey([
+                        'name' => $post['ssh_key_name'],
+                        'public_key' => $post['ssh_key_public_key']
+                    ]),
+                    $module_row
+                );
+
+                if (!$this->Input->errors()) {
+                    $this->setMessage('success', Language::_('Solusvm2.!success.ssh_key_added', true));
+                    $vars = [];
+                } else {
+                    $vars = $post;
+                }
+            } else {
+                $vars = $post;
+            }
+        }
+
+        // Perform reinstall
+        if (!empty($post['action']) && $post['action'] == 'reinstall' && $server_id && $module_row) {
+            $rules = [
+                'confirm' => [
+                    'valid' => [
+                        'rule' => ['compares', '==', '1'],
+                        'message' => Language::_('Solusvm2.!error.solusvm2_confirm.valid', true)
+                    ]
+                ]
+            ];
+
+            if (!empty($post['server_type']) && $post['server_type'] == 'application') {
+                $rules['application'] = [
+                    'valid' => [
+                        'rule' => ['array_key_exists', $applications],
+                        'message' => Language::_('Solusvm2.!error.solusvm2_application.valid', true)
+                    ]
+                ];
+            } else {
+                $rules['os'] = [
+                    'valid' => [
+                        'rule' => ['array_key_exists', $os_images],
+                        'message' => Language::_('Solusvm2.!error.solusvm2_os.valid', true)
+                    ]
+                ];
+            }
+
+            $this->Input->setRules($rules);
+            if ($this->Input->validates($post)) {
+                $data = [
+                    'use_module' => 'true',
+                    'confirm_reinstall' => true,
+                    'solusvm2_os' => (!empty($post['server_type']) && $post['server_type'] == 'application' ? '' : ($post['os'] ?? '')),
+                    'solusvm2_application' => (!empty($post['server_type']) && $post['server_type'] == 'application' ? ($post['application'] ?? '') : ''),
+                    'solusvm2_reset_password' => !empty($post['reset_password']) ? 1 : 0,
+                    'solusvm2_user_data' => ($post['user_data'] ?? '')
+                ];
+
+                if (!empty($post['ssh_keys']) && is_array($post['ssh_keys'])) {
+                    $data['solusvm2_ssh_keys'] = $post['ssh_keys'];
+                }
+
+                Loader::loadModels($this, ['Services']);
+                $this->Services->edit($service->id, $data);
+
+                if (($errors = $this->Services->errors())) {
+                    $this->Input->setErrors($errors);
+                    $vars = $post;
+                } else {
+                    $this->setMessage('success', Language::_('Solusvm2.!success.reinstall', true));
+                    $vars = [];
+                }
+            } else {
+                $vars = $post;
+            }
+        }
+
+        $this->view->set('os_images', $os_images);
+        $this->view->set('applications', $applications);
+        $this->view->set('ssh_keys', $ssh_keys);
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('vars', (object)$vars);
         $this->view->set('client_id', $service->client_id);
         $this->view->set('service_id', $service->id);
 
@@ -2790,6 +3000,25 @@ class Solusvm2 extends Module
         }
 
         return $valid;
+    }
+
+    /**
+     * Validates that the given string looks like an SSH public key
+     *
+     * @param string $key The SSH public key to validate
+     * @return bool True if the key appears valid, false otherwise
+     */
+    public function validateSshPublicKey($key)
+    {
+        $key = trim((string)$key);
+        if (empty($key)) {
+            return false;
+        }
+
+        $parts = explode(' ', $key, 3);
+        $types = ['ssh-rsa', 'ssh-ed25519', 'ssh-dss', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521'];
+
+        return in_array($parts[0], $types) && !empty($parts[1]);
     }
 
     /**

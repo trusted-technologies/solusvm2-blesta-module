@@ -380,6 +380,28 @@ class Solusvm2Api
         return $this->listAll('ssh_keys');
     }
 
+    /**
+     * Creates an SSH key
+     *
+     * @param array $params SSH key data (name, public_key)
+     * @return Solusvm2Response
+     */
+    public function createSshKey(array $params)
+    {
+        return $this->submit('POST', 'ssh_keys', $params);
+    }
+
+    /**
+     * Deletes an SSH key
+     *
+     * @param int $key_id
+     * @return Solusvm2Response
+     */
+    public function deleteSshKey($key_id)
+    {
+        return $this->submit('DELETE', 'ssh_keys/' . (int)$key_id);
+    }
+
     public function listProjects()
     {
         return $this->listAll('projects');
