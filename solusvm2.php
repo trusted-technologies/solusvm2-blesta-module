@@ -1551,11 +1551,13 @@ class Solusvm2 extends Module
 
         // Get the service fields
         $service_fields = $this->serviceFieldsToObject($service->fields);
+        $module_row = $this->getModuleRow(($package->module_row ?? '0'));
 
-        $this->view->set('module_row', $this->getModuleRow(($package->module_row ?? '0')));
+        $this->view->set('module_row', $module_row);
         $this->view->set('package', $package);
         $this->view->set('service', $service);
         $this->view->set('service_fields', $service_fields);
+        $this->view->set('stats', $this->getServerStats($service_fields, $module_row));
 
         return $this->view->fetch();
     }
@@ -1579,11 +1581,13 @@ class Solusvm2 extends Module
 
         // Get the service fields
         $service_fields = $this->serviceFieldsToObject($service->fields);
+        $module_row = $this->getModuleRow(($package->module_row ?? '0'));
 
-        $this->view->set('module_row', $this->getModuleRow(($package->module_row ?? '0')));
+        $this->view->set('module_row', $module_row);
         $this->view->set('package', $package);
         $this->view->set('service', $service);
         $this->view->set('service_fields', $service_fields);
+        $this->view->set('stats', $this->getServerStats($service_fields, $module_row));
 
         return $this->view->fetch();
     }
@@ -1601,7 +1605,6 @@ class Solusvm2 extends Module
         return [
             'tabActions' => Language::_('Solusvm2.tab_actions', true),
             'tabBoot' => Language::_('Solusvm2.tab_boot', true),
-            'tabStats' => Language::_('Solusvm2.tab_stats', true),
             'tabConsole' => Language::_('Solusvm2.tab_console', true)
         ];
     }
@@ -1623,10 +1626,6 @@ class Solusvm2 extends Module
             'tabClientBoot' => [
                 'name' => Language::_('Solusvm2.tab_client_boot', true),
                 'icon' => 'fas fa-life-ring'
-            ],
-            'tabClientStats' => [
-                'name' => Language::_('Solusvm2.tab_client_stats', true),
-                'icon' => 'fas fa-chart-bar'
             ],
             'tabClientConsole' => [
                 'name' => Language::_('Solusvm2.tab_client_console', true),
@@ -1955,62 +1954,16 @@ class Solusvm2 extends Module
     }
 
     /**
-     * Statistics tab (traffic/disk usage)
+     * Builds a normalized statistics object for a virtual server.
      *
-     * @param stdClass $package A stdClass object representing the current package
-     * @param stdClass $service A stdClass object representing the current service
-     * @param array $get Any GET parameters
-     * @param array $post Any POST parameters
-     * @param array $files Any FILES parameters
-     * @return string The string representing the contents of this tab
+     * @param stdClass $service_fields The service fields as an object
+     * @param stdClass $module_row An stdClass object representing the module row
+     * @return stdClass The normalized server statistics
      */
-    public function tabStats($package, $service, array $get = null, array $post = null, array $files = null)
+    private function getServerStats($service_fields, $module_row)
     {
-        $view = $this->statsTab($package, $service);
-        return $view->fetch();
-    }
-
-    /**
-     * Client Statistics tab (traffic/disk usage)
-     *
-     * @param stdClass $package A stdClass object representing the current package
-     * @param stdClass $service A stdClass object representing the current service
-     * @param array $get Any GET parameters
-     * @param array $post Any POST parameters
-     * @param array $files Any FILES parameters
-     * @return string The string representing the contents of this tab
-     */
-    public function tabClientStats($package, $service, array $get = null, array $post = null, array $files = null)
-    {
-        $view = $this->statsTab($package, $service, true);
-        return $view->fetch();
-    }
-
-    /**
-     * Builds the data for the admin/client stats tabs
-     * @see Solusvm2::tabStats() and Solusvm2::tabClientStats()
-     *
-     * @param stdClass $package A stdClass object representing the current package
-     * @param stdClass $service A stdClass object representing the current service
-     * @param bool $client True if the tab is rendered for the client area, false otherwise
-     * @return View A template view to be rendered
-     */
-    private function statsTab($package, $service, $client = false)
-    {
-        $template = ($client ? 'tab_client_stats' : 'tab_stats');
-
-        $this->view = new View($template, 'default');
-
-        // Load the helpers required for this view
-        Loader::loadHelpers($this, ['Form', 'Html']);
-
-        // Get the service fields
-        $service_fields = $this->serviceFieldsToObject($service->fields);
-        $module_row = $this->getModuleRow($package->module_row);
-
         $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
 
-        // Normalize the server data for the view
         $stats = new stdClass();
         $stats->status = ($server->status ?? null);
         $stats->is_suspended = !empty($server->is_suspended);
@@ -2051,11 +2004,7 @@ class Solusvm2 extends Module
             ? $traffic_limit->limit . ' ' . ($traffic_limit->unit ?? 'GB')
             : null;
 
-        $this->view->set('stats', $stats);
-        $this->view->set('service_fields', $service_fields);
-
-        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
-        return $this->view;
+        return $stats;
     }
 
     /**

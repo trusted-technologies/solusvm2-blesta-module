@@ -115,11 +115,9 @@ $lang['Solusvm2.!bytes.value'] = '%1$s %2$s';
 
 // Tab titles
 $lang['Solusvm2.tab_actions'] = 'Actions';
-$lang['Solusvm2.tab_stats'] = 'Stats';
 $lang['Solusvm2.tab_console'] = 'Console';
 $lang['Solusvm2.tab_boot'] = 'Boot & Rescue';
 $lang['Solusvm2.tab_client_actions'] = 'Actions';
-$lang['Solusvm2.tab_client_stats'] = 'Stats';
 $lang['Solusvm2.tab_client_console'] = 'Console';
 $lang['Solusvm2.tab_client_boot'] = 'Boot & Rescue';
 
