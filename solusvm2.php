@@ -1558,14 +1558,15 @@ class Solusvm2 extends Module
         // Get the service fields
         $service_fields = $this->serviceFieldsToObject($service->fields);
         $module_row = $this->getModuleRow(($package->module_row ?? '0'));
+        $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
 
         $this->view->set('module_row', $module_row);
         $this->view->set('package', $package);
         $this->view->set('service', $service);
         $this->view->set('service_fields', $service_fields);
-        $this->view->set('stats', $this->getServerStats($service_fields, $module_row));
+        $this->view->set('stats', $this->getServerStats($service_fields, $module_row, $server));
 
-        return $this->view->fetch();
+        return $this->view->fetch() . $this->getServiceActionsView($service, $package, $server, false);
     }
 
     /**
@@ -1599,6 +1600,18 @@ class Solusvm2 extends Module
     }
 
     /**
+     * Returns HTML content to display in the default service management view
+     *
+     * @param stdClass $package A stdClass object representing the selected package
+     * @param stdClass $service A stdClass object representing the current service
+     * @return string HTML content to display on the service management page
+     */
+    public function getClientManagementContent($package, $service)
+    {
+        return $this->getServiceActionsView($service, $package, true);
+    }
+
+    /**
      * Returns all tabs to display to an admin when managing a service whose
      * package uses this module
      *
@@ -1609,7 +1622,6 @@ class Solusvm2 extends Module
     public function getAdminTabs($package)
     {
         return [
-            'tabActions' => Language::_('Solusvm2.tab_actions', true),
             'tabBoot' => Language::_('Solusvm2.tab_boot', true),
             'tabReinstall' => Language::_('Solusvm2.tab_reinstall', true),
             'tabConsole' => Language::_('Solusvm2.tab_console', true)
@@ -1626,10 +1638,6 @@ class Solusvm2 extends Module
     public function getClientTabs($package)
     {
         return [
-            'tabClientActions' => [
-                'name' => Language::_('Solusvm2.tab_client_actions', true),
-                'icon' => 'fas fa-cogs'
-            ],
             'tabClientBoot' => [
                 'name' => Language::_('Solusvm2.tab_client_boot', true),
                 'icon' => 'fas fa-life-ring'
@@ -1643,6 +1651,95 @@ class Solusvm2 extends Module
                 'icon' => 'fas fa-terminal'
             ]
         ];
+    }
+
+    /**
+     * Renders the service actions box for the client or admin service info page
+     *
+     * @param stdClass $service A stdClass object representing the current service
+     * @param stdClass $package A stdClass object representing the current package
+     * @param bool $client True to render the client view, false for the admin view
+     * @return string The rendered HTML for the actions box
+     */
+    private function getServiceActionsView($service, $package, $server = null, $client = true)
+    {
+        $view_name = $client ? 'client_service_actions' : 'admin_service_actions';
+        $view = new View($view_name, 'default');
+        $view->base_uri = $this->base_uri;
+        $view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
+
+        // Load the helpers required for this view
+        Loader::loadHelpers($this, ['Form', 'Html']);
+
+        // Get the service fields and server status
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        if (!$server) {
+            $module_row = $this->getModuleRow(($package->module_row ?? '0'));
+            $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
+        }
+
+        $view->set('status', ($server->status ?? null));
+        $view->set('service_fields', $service_fields);
+        $view->set('service_id', $service->id);
+        $view->set('client_id', $service->client_id);
+        $view->set('vars', (object)[
+            'hostname' => ($service_fields->solusvm2_hostname ?? null)
+        ]);
+
+        return $view->fetch();
+    }
+
+    /**
+     * Redirects to the main service page after an action is performed
+     *
+     * @param stdClass $service A stdClass object representing the current service
+     * @param bool $client True if redirecting in the client interface, false otherwise
+     */
+    private function redirectToService($service, $client = true)
+    {
+        if ($client) {
+            $url = $this->base_uri . 'services/manage/' . ($service->id ?? '') . '/';
+        } else {
+            $url = $this->base_uri .
+                'clients/servicetab/' .
+                ($service->client_id ?? '') .
+                '/' .
+                ($service->id ?? '') .
+                '/';
+        }
+
+        header('Location: ' . $url);
+        exit;
+    }
+
+    /**
+     * Determines whether the request should be redirected back to the service page
+     *
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param bool $client True if the request came from the client interface, false otherwise
+     * @return bool True if the request should be redirected, false otherwise
+     */
+    private function shouldRedirectAfterAction(array $get = null, array $post = null, $client = true)
+    {
+        $get_key = $client ? '2' : '3';
+        if (!array_key_exists($get_key, (array)$get)) {
+            return false;
+        }
+
+        $action = $get[$get_key];
+
+        // Power actions always redirect after being handled
+        if (in_array($action, ['boot', 'reboot', 'shutdown', 'poweroff'])) {
+            return true;
+        }
+
+        // Form submissions only redirect when there were no validation errors
+        if (in_array($action, ['hostname', 'password', 'reinstall']) && !empty($post) && !$this->Input->errors()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -1673,6 +1770,11 @@ class Solusvm2 extends Module
 
         // Perform the actions
         $vars = $this->actionsTab($package, $service, $os_images, $applications, false, $get, $post);
+
+        // Redirect power actions and successful form submissions back to the service page
+        if ($this->shouldRedirectAfterAction($get, $post, false)) {
+            $this->redirectToService($service, false);
+        }
 
         // Set default vars
         if (empty($vars)) {
@@ -1725,6 +1827,11 @@ class Solusvm2 extends Module
 
         // Perform the actions
         $vars = $this->actionsTab($package, $service, $os_images, $applications, true, $get, $post);
+
+        // Redirect power actions and successful form submissions back to the service page
+        if ($this->shouldRedirectAfterAction($get, $post, true)) {
+            $this->redirectToService($service, true);
+        }
 
         // Set default vars
         if (empty($vars)) {
@@ -1969,11 +2076,14 @@ class Solusvm2 extends Module
      *
      * @param stdClass $service_fields The service fields as an object
      * @param stdClass $module_row An stdClass object representing the module row
+     * @param mixed $server An optional pre-fetched server info object
      * @return stdClass The normalized server statistics
      */
-    private function getServerStats($service_fields, $module_row)
+    private function getServerStats($service_fields, $module_row, $server = null)
     {
-        $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
+        if (!$server) {
+            $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
+        }
 
         $stats = new stdClass();
         $stats->status = ($server->status ?? null);
