@@ -1,26 +1,6 @@
 <?php
 /** @var View $this **/
 ?>
-    <h4><?php $this->_('Solusvm2.service_info.solusvm2_main_ip_address'); ?></h4>
-    <div class="table-responsive">
-        <table class="table table-curved table-striped">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-share fa-flip-vertical"></i></th>
-                    <th><?php $this->_('Solusvm2.service_info.solusvm2_main_ip_address'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td></td>
-                    <td><?php echo isset($service_fields->solusvm2_main_ip_address)
-                        ? $this->Html->safe($service_fields->solusvm2_main_ip_address)
-                        : null; ?></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
     <h4><?php $this->_('Solusvm2.tab_client_stats.heading_stats'); ?></h4>
     <div class="table-responsive">
         <table class="table table-striped">
