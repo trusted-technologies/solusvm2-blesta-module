@@ -210,11 +210,13 @@ $lang['Solusvm2.tab_client_stats.status_suspended'] = 'Suspended';
 // Admin Console tab
 $lang['Solusvm2.tab_console.heading_console'] = 'Console';
 $lang['Solusvm2.tab_console.vnc_password'] = 'VNC Password';
-$lang['Solusvm2.tab_console.send_ctrlaltdel'] = 'Send CtrlAltDel';
+$lang['Solusvm2.tab_console.send_ctrlaltdel'] = 'Send Ctrl+Alt+Del';
+$lang['Solusvm2.tab_console.paste_clipboard'] = 'Paste clipboard';
 $lang['Solusvm2.tab_console.text_console_unavailable'] = 'The console is currently unavailable.';
 
 // Client Console tab
 $lang['Solusvm2.tab_client_console.heading_console'] = 'Console';
 $lang['Solusvm2.tab_client_console.vnc_password'] = 'VNC Password';
-$lang['Solusvm2.tab_client_console.send_ctrlaltdel'] = 'Send CtrlAltDel';
+$lang['Solusvm2.tab_client_console.send_ctrlaltdel'] = 'Send Ctrl+Alt+Del';
+$lang['Solusvm2.tab_client_console.paste_clipboard'] = 'Paste clipboard';
 $lang['Solusvm2.tab_client_console.text_console_unavailable'] = 'The console is currently unavailable.';

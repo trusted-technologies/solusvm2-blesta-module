@@ -16,26 +16,16 @@
 
     <div class="row">
         <div class="col-md-12">
-            <?php if (!empty($console->ws_url) && !empty($vnc_applet_available)) { ?>
-            <!-- actual script modules -->
-            <script type="text/javascript" src="<?php echo VENDORWEBDIR; ?>novnc/novnc/lib/vendor/promise.js"></script>
-            <script type="module" crossorigin="anonymous">
-                import RFB from '<?php echo VENDORWEBDIR; ?>novnc/novnc/core/rfb.js';
-                let rfb;
-
-                $(document).on('ready', function () {
-                    $('#sendCtrlAltDelButton').on('click', function () {
-                        rfb.sendCtrlAltDel();
-                        return false;
-                    });
-
+            <?php if (!empty($console->ws_url)) { ?>
+            <script src="https://cdn.jsdelivr.net/npm/@novnc/novnc@1.5.0/dist/novnc-min.js" crossorigin="anonymous"></script>
+            <script type="text/javascript">
+                $(document).ready(function () {
                     let url = <?php echo json_encode($console->ws_url); ?>;
                     let password = <?php echo json_encode($console->vnc_password); ?>;
 
                     status('Connecting');
 
-                    // Creating a new RFB object will start a new connection
-                    rfb = new RFB(
+                    let rfb = new RFB(
                         document.getElementById('screen'),
                         url,
                         {
@@ -43,7 +33,9 @@
                         }
                     );
 
-                    // Add listeners to important events from the RFB module
+                    rfb.viewOnly = false;
+                    rfb.scaleViewport = true;
+
                     rfb.addEventListener('connect', function () {
                         status('Connected');
                     });
@@ -51,9 +43,20 @@
                         status(e.detail.clean ? 'Disconnected' : 'Something went wrong, connection is closed');
                     });
 
-                    // Set parameters that can be changed on an active connection
-                    rfb.viewOnly = false;
-                    rfb.scaleViewport = true;
+                    $('#sendCtrlAltDelButton').on('click', function () {
+                        rfb.sendCtrlAltDel();
+                        return false;
+                    });
+
+                    $('#pasteClipboardButton').on('click', async function () {
+                        try {
+                            let text = await navigator.clipboard.readText();
+                            rfb.clipboardPasteFrom(text);
+                        } catch (err) {
+                            alert('Unable to paste: ' + err.message);
+                        }
+                        return false;
+                    });
 
                     function status(text) {
                         document.getElementById('status').textContent = text;
@@ -65,6 +68,9 @@
                     <span id="status">Loading</span>
                     <button class="btn btn-primary float-right" id="sendCtrlAltDelButton"><?php $this->_(
                         'Solusvm2.tab_client_console.send_ctrlaltdel',
+                    ); ?></button>
+                    <button class="btn btn-secondary float-right mr-2" id="pasteClipboardButton"><?php $this->_(
+                        'Solusvm2.tab_client_console.paste_clipboard',
                     ); ?></button>
                 </div>
             </div>

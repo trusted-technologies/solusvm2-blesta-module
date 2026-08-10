@@ -2135,8 +2135,6 @@ class Solusvm2 extends Module
             }
         }
 
-        // Check whether the noVNC vendor code is available
-        $this->view->set('vnc_applet_available', is_dir(VENDORDIR . 'novnc'));
         $this->view->set('console', $console);
         $this->view->set('service_fields', $service_fields);
 
