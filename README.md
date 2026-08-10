@@ -23,6 +23,12 @@ The official Blesta module for SolusVM only supports the legacy SolusVM v1 XML A
 4. Go to **Settings > Company > Modules > Available**.
 5. Find **SolusVM 2** and click **Install**.
 
+## Hostname generation
+
+On the client order form the hostname field is prefilled with a random name like `velvet-timber.trust-me.host`. The domain suffix is taken from the Blesta company hostname (configured under **Settings > Company > General**), stripping the leading subdomain. For example, if Blesta runs on `blesta.trust-me.host`, the suffix becomes `trust-me.host`.
+
+To override this, set `Solusvm2.hostname.default_domain` in `config/solusvm2.php`.
+
 ## Adding a SolusVM 2 server
 
 1. Go to **Settings > Company > Modules > Manage**.

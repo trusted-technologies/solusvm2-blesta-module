@@ -8,9 +8,9 @@ Configure::set('Solusvm2.page_refresh_rate_fast', '5000');
 // Note: Set to number of milliseconds (1000 = 1 second)
 Configure::set('Solusvm2.page_refresh_rate', '30000');
 
-// Default domain suffix for auto-generated hostnames on the client order form
-// (a hostname like "amber-fox.trust-me.host" is prefilled when the client leaves the field empty)
-Configure::set('Solusvm2.hostname.default_domain', 'trust-me.host');
+// Override domain suffix for auto-generated hostnames on the client order form.
+// Leave empty to use the company hostname configured in Blesta (e.g. blesta.trust-me.host -> trust-me.host).
+Configure::set('Solusvm2.hostname.default_domain', '');
 
 // Email templates
 Configure::set('Solusvm2.email_templates', [

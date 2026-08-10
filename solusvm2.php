@@ -2814,9 +2814,43 @@ class Solusvm2 extends Module
         ];
 
         $domain = trim((string)Configure::get('Solusvm2.hostname.default_domain'));
+        if ($domain === '') {
+            $domain = $this->getCompanyDomain();
+        }
+
         $hostname = $adjectives[array_rand($adjectives)] . '-' . $nouns[array_rand($nouns)];
 
         return ($domain !== '' ? $hostname . '.' . $domain : $hostname);
+    }
+
+    /**
+     * Returns the root domain of the Blesta company hostname.
+     * Strips the leading subdomain (e.g. "blesta.trust-me.host" -> "trust-me.host").
+     *
+     * @return string The root domain, or an empty string if it cannot be determined
+     */
+    private function getCompanyDomain()
+    {
+        $company = Configure::get('Blesta.company');
+        $hostname = '';
+
+        if (is_object($company) && isset($company->hostname)) {
+            $hostname = $company->hostname;
+        }
+
+        if ($hostname === '' && isset($_SERVER['HTTP_HOST'])) {
+            $hostname = $_SERVER['HTTP_HOST'];
+        }
+
+        $hostname = strtolower(trim($hostname));
+        $hostname = preg_replace('/^www\./i', '', $hostname);
+
+        $parts = explode('.', $hostname);
+        if (count($parts) > 2) {
+            array_shift($parts);
+        }
+
+        return implode('.', $parts);
     }
 
     /**
