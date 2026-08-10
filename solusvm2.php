@@ -1600,6 +1600,7 @@ class Solusvm2 extends Module
     {
         return [
             'tabActions' => Language::_('Solusvm2.tab_actions', true),
+            'tabBoot' => Language::_('Solusvm2.tab_boot', true),
             'tabStats' => Language::_('Solusvm2.tab_stats', true),
             'tabConsole' => Language::_('Solusvm2.tab_console', true)
         ];
@@ -1618,6 +1619,10 @@ class Solusvm2 extends Module
             'tabClientActions' => [
                 'name' => Language::_('Solusvm2.tab_client_actions', true),
                 'icon' => 'fas fa-cogs'
+            ],
+            'tabClientBoot' => [
+                'name' => Language::_('Solusvm2.tab_client_boot', true),
+                'icon' => 'fas fa-life-ring'
             ],
             'tabClientStats' => [
                 'name' => Language::_('Solusvm2.tab_client_stats', true),
@@ -2086,6 +2091,128 @@ class Solusvm2 extends Module
     }
 
     /**
+     * Boot & Rescue tab (boot mode and root password reset)
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param array $files Any FILES parameters
+     * @return string The string representing the contents of this tab
+     */
+    public function tabBoot($package, $service, array $get = null, array $post = null, array $files = null)
+    {
+        $view = $this->bootTab($package, $service, false, $post);
+        return $view->fetch();
+    }
+
+    /**
+     * Client Boot & Rescue tab (boot mode and root password reset)
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param array $files Any FILES parameters
+     * @return string The string representing the contents of this tab
+     */
+    public function tabClientBoot($package, $service, array $get = null, array $post = null, array $files = null)
+    {
+        $view = $this->bootTab($package, $service, true, $post);
+        return $view->fetch();
+    }
+
+    /**
+     * Builds the data for the admin/client Boot & Rescue tabs
+     * @see Solusvm2::tabBoot() and Solusvm2::tabClientBoot()
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param bool $client True if the tab is rendered for the client area, false otherwise
+     * @param array $post Any POST parameters
+     * @return View A template view to be rendered
+     */
+    private function bootTab($package, $service, $client = false, array $post = null)
+    {
+        $template = ($client ? 'tab_client_boot' : 'tab_boot');
+
+        $this->view = new View($template, 'default');
+
+        // Load the helpers required for this view
+        Loader::loadHelpers($this, ['Form', 'Html']);
+
+        // Get the service fields
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        $module_row = $this->getModuleRow($package->module_row);
+
+        $server_id = ($service_fields->solusvm2_server_id ?? null);
+
+        $boot = new stdClass();
+        $boot->mode = 'disk';
+        $boot->iso_image_id = null;
+        $iso_images = [];
+        $new_password = null;
+
+        if ($server_id && $module_row) {
+            $api = $this->getApi($module_row->meta->host, $module_row->meta->api_token);
+
+            // Fetch the current boot settings
+            $this->log($module_row->meta->host . '|servers/' . (int)$server_id . '/boot', serialize([]), 'input', true);
+            $boot_response = $this->parseResponse($api->getServerBoot($server_id), $module_row);
+            if (!$this->Input->errors() && !empty($boot_response['data'])) {
+                $boot->mode = ($boot_response['data']['mode'] ?? 'disk');
+                $boot->iso_image_id = ($boot_response['data']['iso_image_id'] ?? null);
+            }
+
+            // Fetch the available ISO images
+            $iso_images = $this->getIsoImages($module_row);
+
+            // Apply boot mode change
+            if (!empty($post['boot_mode'])) {
+                $data = ['mode' => $post['boot_mode']];
+                if ($post['boot_mode'] == 'iso' && !empty($post['iso_image_id'])) {
+                    $data['iso_image_id'] = (int)$post['iso_image_id'];
+                }
+
+                $this->log(
+                    $module_row->meta->host . '|servers/' . (int)$server_id . '/boot',
+                    serialize($data),
+                    'input',
+                    true
+                );
+                $this->parseResponse($api->setServerBoot($server_id, $data), $module_row);
+
+                if (!$this->Input->errors()) {
+                    $this->setMessage('success', Language::_('Solusvm2.!success.boot_mode', true));
+                    $boot->mode = $data['mode'];
+                    $boot->iso_image_id = ($data['iso_image_id'] ?? null);
+                }
+            }
+
+            // Reset the root password
+            if (!$this->Input->errors() && !empty($post['reset_password'])) {
+                Loader::loadModels($this, ['Services']);
+                $this->Services->edit($service->id, ['solusvm2_reset_password' => 1]);
+
+                if (($errors = $this->Services->errors())) {
+                    $this->Input->setErrors($errors);
+                } else {
+                    $this->setMessage('success', Language::_('Solusvm2.!success.password', true));
+                }
+            }
+        }
+
+        $this->view->set('boot', $boot);
+        $this->view->set('iso_images', $iso_images);
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('client_id', $service->client_id);
+        $this->view->set('service_id', $service->id);
+
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
+        return $this->view;
+    }
+
+    /**
      * Builds the data for the admin/client console tabs
      * @see Solusvm2::tabConsole() and Solusvm2::tabClientConsole()
      *
@@ -2538,6 +2665,22 @@ class Solusvm2 extends Module
         }
 
         return $applications;
+    }
+
+    /**
+     * Fetches the available ISO images as an ID => name map
+     *
+     * @param stdClass $module_row An stdClass object representing the module row
+     * @return array
+     */
+    private function getIsoImages($module_row)
+    {
+        $iso_images = [];
+        foreach ($this->fetchList($module_row, 'listIsoImages') as $iso_image) {
+            $iso_images[$iso_image['id']] = $iso_image['name'];
+        }
+
+        return $iso_images;
     }
 
     /**

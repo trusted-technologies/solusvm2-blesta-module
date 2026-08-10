@@ -117,9 +117,11 @@ $lang['Solusvm2.!bytes.value'] = '%1$s %2$s';
 $lang['Solusvm2.tab_actions'] = 'Actions';
 $lang['Solusvm2.tab_stats'] = 'Stats';
 $lang['Solusvm2.tab_console'] = 'Console';
+$lang['Solusvm2.tab_boot'] = 'Boot & Rescue';
 $lang['Solusvm2.tab_client_actions'] = 'Actions';
 $lang['Solusvm2.tab_client_stats'] = 'Stats';
 $lang['Solusvm2.tab_client_console'] = 'Console';
+$lang['Solusvm2.tab_client_boot'] = 'Boot & Rescue';
 
 // Admin Actions tab
 $lang['Solusvm2.tab_actions.heading_actions'] = 'Actions';
@@ -220,3 +222,30 @@ $lang['Solusvm2.tab_client_console.vnc_password'] = 'VNC Password';
 $lang['Solusvm2.tab_client_console.send_ctrlaltdel'] = 'Send Ctrl+Alt+Del';
 $lang['Solusvm2.tab_client_console.paste_clipboard'] = 'Paste clipboard';
 $lang['Solusvm2.tab_client_console.text_console_unavailable'] = 'The console is currently unavailable.';
+
+// Admin Boot & Rescue tab
+$lang['Solusvm2.tab_boot.heading_boot'] = 'Boot';
+$lang['Solusvm2.tab_boot.text_boot'] = 'Choose a boot option. Booting from the rescue ISO helps you fix kernel mismatches and corrupted file systems.';
+$lang['Solusvm2.tab_boot.field_boot_disk'] = 'Boot from Disk';
+$lang['Solusvm2.tab_boot.field_boot_rescue'] = 'Boot from Rescue ISO';
+$lang['Solusvm2.tab_boot.field_boot_iso'] = 'Boot from ISO Image';
+$lang['Solusvm2.tab_boot.field_iso_image'] = 'ISO Image';
+$lang['Solusvm2.tab_boot.field_boot_submit'] = 'Apply';
+$lang['Solusvm2.tab_boot.heading_password'] = 'Root Password';
+$lang['Solusvm2.tab_boot.text_password_reset'] = 'This will set a new root password.';
+$lang['Solusvm2.tab_boot.field_password_submit'] = 'Reset Root Password';
+
+// Client Boot & Rescue tab
+$lang['Solusvm2.tab_client_boot.heading_boot'] = 'Boot';
+$lang['Solusvm2.tab_client_boot.text_boot'] = 'Choose a boot option. Booting from the rescue ISO helps you fix kernel mismatches and corrupted file systems.';
+$lang['Solusvm2.tab_client_boot.field_boot_disk'] = 'Boot from Disk';
+$lang['Solusvm2.tab_client_boot.field_boot_rescue'] = 'Boot from Rescue ISO';
+$lang['Solusvm2.tab_client_boot.field_boot_iso'] = 'Boot from ISO Image';
+$lang['Solusvm2.tab_client_boot.field_iso_image'] = 'ISO Image';
+$lang['Solusvm2.tab_client_boot.field_boot_submit'] = 'Apply';
+$lang['Solusvm2.tab_client_boot.heading_password'] = 'Root Password';
+$lang['Solusvm2.tab_client_boot.text_password_reset'] = 'This will set a new password.';
+$lang['Solusvm2.tab_client_boot.field_password_submit'] = 'Reset Root Password';
+
+// Boot & Rescue success message
+$lang['Solusvm2.!success.boot_mode'] = 'Boot mode updated successfully.';

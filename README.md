@@ -70,6 +70,7 @@ Changes to these options trigger a resize when the service is edited.
 Both the admin and client service pages provide the same tabs:
 
 - **Actions** — boot, shutdown, power off, reboot, reinstall, change hostname, reset root password.
+- **Boot & Rescue** — change boot mode (disk, rescue ISO, ISO image) and reset the root password.
 - **Stats** — server status, primary IP, plan specs, traffic usage.
 - **Console** — browser-based noVNC console.
 

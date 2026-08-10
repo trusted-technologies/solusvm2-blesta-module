@@ -1,0 +1,91 @@
+<?php /** @var View $this **/ ?>
+
+    <h4><?php $this->_('Solusvm2.tab_client_boot.heading_boot'); ?></h4>
+    <p><?php $this->_('Solusvm2.tab_client_boot.text_boot'); ?></p>
+
+    <?php $this->Form->create(
+        $this->base_uri . 'services/manage/' . (isset($service_id) ? $service_id : null) . '/tabClientBoot/',
+    ); ?>
+    <div class="mb-3">
+        <div class="radio">
+            <label>
+                <?php
+                $this->Form->fieldRadio(
+                    'boot_mode',
+                    'disk',
+                    (isset($boot->mode) ? $boot->mode : null) == 'disk',
+                    ['id' => 'boot_mode_disk']
+                );
+                ?>
+                <?php $this->_('Solusvm2.tab_client_boot.field_boot_disk'); ?>
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                <?php
+                $this->Form->fieldRadio(
+                    'boot_mode',
+                    'rescue',
+                    (isset($boot->mode) ? $boot->mode : null) == 'rescue',
+                    ['id' => 'boot_mode_rescue']
+                );
+                ?>
+                <?php $this->_('Solusvm2.tab_client_boot.field_boot_rescue'); ?>
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                <?php
+                $this->Form->fieldRadio(
+                    'boot_mode',
+                    'iso',
+                    (isset($boot->mode) ? $boot->mode : null) == 'iso',
+                    ['id' => 'boot_mode_iso']
+                );
+                ?>
+                <?php $this->_('Solusvm2.tab_client_boot.field_boot_iso'); ?>
+            </label>
+        </div>
+    </div>
+
+    <div class="mb-3" id="solusvm2_iso_select" style="<?php echo (isset($boot->mode) && $boot->mode == 'iso') ? '' : 'display:none;'; ?>">
+        <?php
+        $this->Form->label($this->_('Solusvm2.tab_client_boot.field_iso_image', true), 'iso_image_id');
+        $this->Form->fieldSelect(
+            'iso_image_id',
+            isset($iso_images) ? $iso_images : null,
+            isset($boot->iso_image_id) ? $boot->iso_image_id : null,
+            ['id' => 'iso_image_id', 'class' => 'form-control']
+        );
+        ?>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <?php $this->Form->fieldSubmit('boot_btn', $this->_('Solusvm2.tab_client_boot.field_boot_submit', true), [
+            'class' => 'btn btn-primary',
+        ]); ?>
+    </div>
+    <?php $this->Form->end(); ?>
+
+    <hr />
+    <h4><?php $this->_('Solusvm2.tab_client_boot.heading_password'); ?></h4>
+    <p><?php $this->_('Solusvm2.tab_client_boot.text_password_reset'); ?></p>
+    <?php $this->Form->create(
+        $this->base_uri . 'services/manage/' . (isset($service_id) ? $service_id : null) . '/tabClientBoot/',
+    ); ?>
+    <div class="d-flex justify-content-end">
+        <?php $this->Form->fieldSubmit('reset_password_btn', $this->_('Solusvm2.tab_client_boot.field_password_submit', true), [
+            'class' => 'btn btn-warning',
+            'name' => 'reset_password',
+            'value' => '1'
+        ]); ?>
+    </div>
+    <?php $this->Form->end(); ?>
+
+<script type="text/javascript">
+$(document).ready(function () {
+    $('input[name="boot_mode"]').on('change', function () {
+        $('#solusvm2_iso_select').toggle($('#boot_mode_iso').is(':checked'));
+    });
+});
+</script>

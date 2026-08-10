@@ -384,4 +384,32 @@ class Solusvm2Api
     {
         return $this->listAll('projects');
     }
+
+    public function listIsoImages()
+    {
+        return $this->listAll('iso_images');
+    }
+
+    /**
+     * Fetches the boot settings of a virtual server
+     *
+     * @param int $server_id
+     * @return Solusvm2Response
+     */
+    public function getServerBoot($server_id)
+    {
+        return $this->submit('GET', 'servers/' . (int)$server_id . '/boot');
+    }
+
+    /**
+     * Sets the boot mode of a virtual server
+     *
+     * @param int $server_id
+     * @param array $params Boot settings (mode: disk|rescue|iso, iso_image_id)
+     * @return Solusvm2Response
+     */
+    public function setServerBoot($server_id, array $params)
+    {
+        return $this->submit('POST', 'servers/' . (int)$server_id . '/boot', $params);
+    }
 }
