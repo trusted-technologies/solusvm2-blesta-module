@@ -1597,6 +1597,37 @@ class Solusvm2 extends Module
         $this->view->set('service_fields', $service_fields);
         $this->view->set('stats', $this->getServerStats($service_fields, $module_row, $server));
 
+        return $this->view->fetch();
+    }
+
+    /**
+     * Returns HTML content to display in the default service management view
+     *
+     * @param stdClass $package A stdClass object representing the selected package
+     * @param stdClass $service A stdClass object representing the current service
+     * @return string HTML content to display on the service management page
+     */
+    public function getClientManagementContent($package, $service)
+    {
+        // Load the view into this object, so helpers can be automatically added to the view
+        $this->view = new View('client_service_info', 'default');
+        $this->view->base_uri = $this->base_uri;
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
+
+        // Load the helpers required for this view
+        Loader::loadHelpers($this, ['Html']);
+
+        // Get the service fields
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        $module_row = $this->getModuleRow(($package->module_row ?? '0'));
+        $server = $this->getServerInfo(($service_fields->solusvm2_server_id ?? null), $module_row);
+
+        $this->view->set('module_row', $module_row);
+        $this->view->set('package', $package);
+        $this->view->set('service', $service);
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('stats', $this->getServerStats($service_fields, $module_row, $server));
+
         return $this->view->fetch() . $this->getServiceActionsView($service, $package, $server, true);
     }
 
@@ -2491,6 +2522,7 @@ class Solusvm2 extends Module
         $template = ($client ? 'tab_client_console' : 'tab_console');
 
         $this->view = new View($template, 'default');
+        $this->view->base_uri = $this->base_uri;
 
         // Load the helpers required for this view
         Loader::loadHelpers($this, ['Form', 'Html']);
@@ -2522,7 +2554,11 @@ class Solusvm2 extends Module
 
                 $url = ($vnc['url'] ?? ($vnc['data']['url'] ?? null));
                 if (!$this->Input->errors() && $url) {
-                    $console->ws_url = 'wss://' . $module_row->meta->host . '/vnc?url=' . $url;
+                    if (preg_match('#^wss?://#', $url)) {
+                        $console->ws_url = $url;
+                    } else {
+                        $console->ws_url = 'wss://' . $module_row->meta->host . '/vnc?url=' . rawurlencode($url);
+                    }
                 }
             }
         }
@@ -2531,6 +2567,7 @@ class Solusvm2 extends Module
         $this->view->set('service_fields', $service_fields);
 
         $this->view->setDefaultView('components' . DS . 'modules' . DS . 'solusvm2' . DS);
+        $this->view->view_dir = $this->base_uri . 'components/modules/solusvm2/views/default/';
         return $this->view;
     }
 
