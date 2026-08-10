@@ -1,0 +1,15 @@
+{
+    "name": "blesta/solusvm2",
+    "description": "SolusVM 2",
+    "license": "MIT",
+    "type": "blesta-module",
+    "authors": [
+        {
+            "name": "TRUSTED TECHNOLOGIES Sp. z o.o.",
+            "homepage": "https://github.com/trusted-technologies"
+        }
+    ],
+    "require": {
+        "blesta/composer-installer": "~1.0"
+    }
+}

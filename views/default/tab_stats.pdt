@@ -1,0 +1,67 @@
+<?php /** @var View $this **/ ?>
+
+<h6 class="form-section-header"><?php $this->_('Solusvm2.tab_stats.heading_stats'); ?></h6>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <tbody>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_server_status'); ?></td>
+                <td><?php
+                    $status_label = (!empty($stats->status)
+                        ? $this->_('Solusvm2.tab_stats.status_' . $stats->status, true)
+                        : null);
+                    echo $this->Html->safe(
+                        $status_label
+                            ?: (!empty($stats->status)
+                                ? $stats->status
+                                : $this->_('Solusvm2.tab_stats.status_unknown', true))
+                    );
+                    echo !empty($stats->is_suspended)
+                        ? ' (' . $this->Html->safe($this->_('Solusvm2.tab_stats.status_suspended', true)) . ')'
+                        : '';
+                ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_ips'); ?></td>
+                <td><?php echo !empty($stats->ips)
+                    ? $this->Html->safe(implode(', ', $stats->ips))
+                    : null; ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_plan'); ?></td>
+                <td><?php echo isset($stats->plan) ? $this->Html->safe($stats->plan) : null; ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_vcpu'); ?></td>
+                <td><?php echo isset($stats->vcpu) ? $this->Html->safe($stats->vcpu) : null; ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_memory'); ?></td>
+                <td><?php echo isset($stats->memory) ? $this->Html->safe($stats->memory) : null; ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_disk'); ?></td>
+                <td><?php echo isset($stats->disk)
+                    ? $this->Html->safe($stats->disk . ' ' . $this->_('Solusvm2.tab_stats.unit_gb', true))
+                    : null; ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_traffic'); ?></td>
+                <td><?php
+                    echo isset($stats->traffic_total) ? $this->Html->safe($stats->traffic_total) : null;
+                    echo !empty($stats->traffic_limit)
+                        ? ' / ' . $this->Html->safe($stats->traffic_limit)
+                        : '';
+                ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_traffic_in'); ?></td>
+                <td><?php echo isset($stats->traffic_in) ? $this->Html->safe($stats->traffic_in) : null; ?></td>
+            </tr>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_stats.heading_traffic_out'); ?></td>
+                <td><?php echo isset($stats->traffic_out) ? $this->Html->safe($stats->traffic_out) : null; ?></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

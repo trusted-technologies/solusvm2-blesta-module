@@ -1,0 +1,268 @@
+<?php /** @var View $this **/ ?>
+
+<h6 class="form-section-header"><?php $this->_('Solusvm2.tab_actions.heading_actions'); ?></h6>
+<div class="mb-3">
+    <div class="options" id="solusvm2_actions">
+        <p>
+            <?php
+            $status = (isset($server->status) ? $server->status : null);
+            $status_label = ($status ? $this->_('Solusvm2.tab_actions.status_' . $status, true) : null);
+            if (empty($status_label)) {
+                $status_label = ($status ?: $this->_('Solusvm2.tab_actions.status_unknown', true));
+            }
+            ?>
+            <?php $this->_('Solusvm2.tab_actions.server_status'); ?> <span class="buff <?php echo $this->Html->safe(
+                $status ?? 'disabled',
+            ); ?>"><?php echo $this->Html->safe($status_label); ?><?php echo !empty($server->is_suspended)
+    ? ' (' . $this->Html->safe($this->_('Solusvm2.tab_actions.status_suspended', true)) . ')'
+    : ''; ?></span>
+        </p>
+
+        <?php if ($status == 'running') { ?>
+        <a href="<?php echo $this->Html->safe(
+            $this->base_uri .
+                'clients/servicetab/' .
+                (isset($client_id) ? $client_id : null) .
+                '/' .
+                (isset($service_id) ? $service_id : null) .
+                '/tabActions/reboot/',
+        ); ?>" class="reboot btn btn-success"><i class="bi bi-arrow-clockwise"></i> <?php $this->_(
+    'Solusvm2.!actions.reboot',
+); ?></a>
+        <a href="<?php echo $this->Html->safe(
+            $this->base_uri .
+                'clients/servicetab/' .
+                (isset($client_id) ? $client_id : null) .
+                '/' .
+                (isset($service_id) ? $service_id : null) .
+                '/tabActions/shutdown/',
+        ); ?>" class="shutdown btn btn-danger"><i class="bi bi-power"></i> <?php $this->_(
+    'Solusvm2.!actions.shutdown',
+); ?></a>
+        <a href="<?php echo $this->Html->safe(
+            $this->base_uri .
+                'clients/servicetab/' .
+                (isset($client_id) ? $client_id : null) .
+                '/' .
+                (isset($service_id) ? $service_id : null) .
+                '/tabActions/poweroff/',
+        ); ?>" class="poweroff btn btn-danger"><i class="bi bi-plug"></i> <?php $this->_(
+    'Solusvm2.!actions.poweroff',
+); ?></a>
+        <?php } elseif ($status == 'stopped') { ?>
+        <a href="<?php echo $this->Html->safe(
+            $this->base_uri .
+                'clients/servicetab/' .
+                (isset($client_id) ? $client_id : null) .
+                '/' .
+                (isset($service_id) ? $service_id : null) .
+                '/tabActions/boot/',
+        ); ?>" class="boot btn btn-outline-secondary"><i class="bi bi-power"></i> <?php $this->_(
+    'Solusvm2.!actions.boot',
+); ?></a>
+        <?php } ?>
+        <a href="#" class="reinstall btn btn-outline-secondary"><i class="bi bi-download"></i> <?php $this->_(
+    'Solusvm2.!actions.reinstall',
+); ?></a>
+        <a href="#" class="hostname btn btn-outline-secondary"><i class="bi bi-pencil"></i> <?php $this->_(
+    'Solusvm2.!actions.hostname',
+); ?></a>
+        <a href="#" class="password btn btn-outline-secondary"><i class="bi bi-lock"></i> <?php $this->_(
+    'Solusvm2.!actions.password',
+); ?></a>
+    </div>
+</div>
+
+<div id="reinstall" style="display:none;">
+    <h6 class="form-section-header mt-4"><?php $this->_('Solusvm2.tab_actions.heading_reinstall'); ?></h6>
+    <?php $this->Form->create(
+        $this->base_uri .
+            'clients/servicetab/' .
+            (isset($client_id) ? $client_id : null) .
+            '/' .
+            (isset($service_id) ? $service_id : null) .
+            '/tabActions/reinstall/',
+    ); ?>
+    <div>
+        <?php if (!empty($applications)) { ?>
+        <ul class="nav nav-tabs" id="solusvm2_install_tabs" style="margin-bottom:15px;">
+            <li class="active"><a href="#" data-solusvm2-tab="os"><?php $this->_('Solusvm2.tab_actions.tab_os'); ?></a></li>
+            <li><a href="#" data-solusvm2-tab="application"><?php $this->_('Solusvm2.tab_actions.tab_application'); ?></a></li>
+        </ul>
+        <?php } ?>
+        <div class="mb-3" id="solusvm2_os_tab">
+            <?php
+            $this->Form->label($this->_('Solusvm2.tab_actions.field_os', true), 'os');
+            $this->Form->fieldSelect('os', isset($os_images) ? $os_images : null, isset($vars->os) ? $vars->os : null, [
+                'id' => 'os',
+                'class' => 'form-control',
+            ]);
+            ?>
+        </div>
+        <?php if (!empty($applications)) { ?>
+        <div class="mb-3" id="solusvm2_application_tab" style="display:none;">
+            <?php
+            $this->Form->label($this->_('Solusvm2.tab_actions.field_application', true), 'application');
+            $this->Form->fieldSelect(
+                'application',
+                ['' => $this->_('Solusvm2.please_select', true)] + $applications,
+                isset($vars->application) ? $vars->application : null,
+                ['id' => 'application', 'class' => 'form-control', 'disabled' => true]
+            );
+            ?>
+        </div>
+        <?php } ?>
+        <div class="mb-3">
+            <div class="checkbox">
+                <label>
+                    <?php
+                    $this->Form->fieldCheckbox('confirm', '1', '0', ['id' => 'confirm']);
+                    $this->_('Solusvm2.tab_actions.field_confirm');
+                    ?>
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end">
+        <?php $this->Form->fieldSubmit('reinstall_btn', $this->_('Solusvm2.tab_actions.field_reinstall_submit', true), [
+            'class' => 'btn btn-primary',
+        ]); ?>
+    </div>
+    <?php $this->Form->end(); ?>
+</div>
+
+<div id="hostname" style="display:none;">
+    <h6 class="form-section-header mt-4"><?php $this->_('Solusvm2.tab_actions.heading_hostname'); ?></h6>
+    <?php $this->Form->create(
+        $this->base_uri .
+            'clients/servicetab/' .
+            (isset($client_id) ? $client_id : null) .
+            '/' .
+            (isset($service_id) ? $service_id : null) .
+            '/tabActions/hostname/',
+    ); ?>
+    <div>
+        <div class="mb-3">
+            <?php
+            $this->Form->label($this->_('Solusvm2.tab_actions.field_hostname', true), 'host');
+            $this->Form->fieldText('hostname', isset($vars->hostname) ? $vars->hostname : null, [
+                'id' => 'host',
+                'class' => 'form-control',
+                'placeholder' => $this->_('Solusvm2.tab_actions.field_hostname', true),
+            ]);
+            ?>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end">
+        <?php $this->Form->fieldSubmit('hostname_btn', $this->_('Solusvm2.tab_actions.field_hostname_submit', true), [
+            'class' => 'btn btn-primary',
+        ]); ?>
+    </div>
+    <?php $this->Form->end(); ?>
+</div>
+
+<div id="password" style="display:none;">
+    <h6 class="form-section-header mt-4"><?php $this->_('Solusvm2.tab_actions.heading_password'); ?></h6>
+    <div class="mb-3">
+        <?php $this->Form->label($this->_('Solusvm2.tab_actions.field_current_password', true), 'current_password'); ?>
+        <p><code><?php echo isset($service_fields->solusvm2_root_password)
+            ? $this->Html->safe($service_fields->solusvm2_root_password)
+            : null; ?></code></p>
+    </div>
+    <?php $this->Form->create(
+        $this->base_uri .
+            'clients/servicetab/' .
+            (isset($client_id) ? $client_id : null) .
+            '/' .
+            (isset($service_id) ? $service_id : null) .
+            '/tabActions/password/',
+    ); ?>
+    <p><?php $this->_('Solusvm2.tab_actions.text_password_reset'); ?></p>
+    <div class="d-flex justify-content-end">
+        <?php $this->Form->fieldSubmit('password_btn', $this->_('Solusvm2.tab_actions.field_password_submit', true), [
+            'class' => 'btn btn-primary',
+        ]); ?>
+    </div>
+    <?php $this->Form->end(); ?>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    setSolusvm2Interval('<?php echo Configure::get('Solusvm2.page_refresh_rate_fast'); ?>', '');
+    <?php
+    if (isset($reinstall) ? $reinstall : false) { ?>
+    showSection('reinstall');
+    <?php }
+    if (isset($hostname) ? $hostname : false) { ?>
+    showSection('hostname');
+    <?php }
+    if (isset($password) ? $password : false) { ?>
+    showSection('password');
+    <?php }
+    ?>
+
+    $('.options').on('click', 'a.reinstall, a.hostname, a.password', function(e) {
+        var item_class = "reinstall";
+        if ($(this).hasClass('hostname'))
+            item_class = "hostname";
+        else if ($(this).hasClass('password'))
+            item_class = "password";
+
+        hideSections();
+        showSection(item_class);
+    });
+
+    $('#solusvm2_install_tabs a').on('click', function(e) {
+        e.preventDefault();
+        var name = $(this).data('solusvm2-tab');
+
+        $('#solusvm2_install_tabs li').removeClass('active');
+        $(this).parent().addClass('active');
+
+        $('#solusvm2_os_tab').toggle(name == 'os');
+        $('#solusvm2_application_tab').toggle(name == 'application');
+        $('#os').prop('disabled', name != 'os');
+        $('#application').prop('disabled', name != 'application');
+    });
+
+    function hideSections() {
+        $('#reinstall').hide();
+        $('#hostname').hide();
+        $('#password').hide();
+    }
+
+    function showSection(id) {
+        $('#' + id).show();
+    }
+
+    function setSolusvm2Interval(solusvm2_refresh_rate, solusvm2_old_action_data) {
+        var interval = '';
+        interval = setInterval(function() {
+            $(this).blestaRequest("GET",
+                '<?php echo $this->base_uri .
+                    'clients/servicetab/' .
+                    (isset($client_id) ? $client_id : null) .
+                    '/' .
+                    (isset($service_id) ? $service_id : null) .
+                    '/tabActions/'; ?>',
+                null,
+                // Success response
+                function(data) {
+                    if (data.replacer && data.content) {
+                        var html = $('div', data.content).filter('#solusvm2_actions').html();
+                        $('#solusvm2_actions').html(html);
+                        solusvm2_refresh_rate = (html == solusvm2_old_action_data) ? '<?php echo Configure::get(
+                            'Solusvm2.page_refresh_rate',
+                        ); ?>' : '<?php echo Configure::get('Solusvm2.page_refresh_rate_fast'); ?>';
+
+                        clearInterval(interval);
+                        setSolusvm2Interval(solusvm2_refresh_rate, html);
+                    }
+                },
+                null,
+                {dataType: 'json'}
+            );
+        }, solusvm2_refresh_rate);
+    }
+});
+</script>

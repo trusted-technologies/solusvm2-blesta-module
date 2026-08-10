@@ -1,0 +1,43 @@
+{
+    "version": "1.0.0",
+    "name": "Solusvm2.name",
+    "description": "Solusvm2.description",
+    "authors": [
+        {
+            "name": "TRUSTED TECHNOLOGIES Sp. z o.o.",
+            "url": "https://github.com/trusted-technologies"
+        }
+    ],
+    "package": {
+        "name_key": "solusvm2_hostname"
+    },
+    "service": {
+        "name_key": "solusvm2_hostname"
+    },
+    "module": {
+        "row": "Solusvm2.module_row",
+        "rows": "Solusvm2.module_row_plural",
+        "row_key": "server_name",
+        "group": "Solusvm2.module_group"
+    },
+    "email_tags": {
+        "module": [
+            "host"
+        ],
+        "package": [],
+        "service": [
+            "solusvm2_server_id",
+            "solusvm2_user_id",
+            "solusvm2_hostname",
+            "solusvm2_main_ip_address",
+            "solusvm2_root_password",
+            "solusvm2_os",
+            "solusvm2_application",
+            "solusvm2_plan"
+        ]
+    },
+    "logo": {
+        "light": "views/default/images/logo.svg",
+        "dark": "views/default/images/logo-dark.svg"
+    }
+}

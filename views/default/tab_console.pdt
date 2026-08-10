@@ -1,0 +1,85 @@
+<?php /** @var View $this **/ ?>
+
+<h6 class="form-section-header"><?php $this->_('Solusvm2.tab_console.heading_console'); ?></h6>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <tbody>
+            <tr>
+                <td><?php $this->_('Solusvm2.tab_console.vnc_password'); ?></td>
+                <td><?php echo isset($console->vnc_password)
+                    ? $this->Html->safe($console->vnc_password)
+                    : null; ?></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <?php if (!empty($console->ws_url) && !empty($vnc_applet_available)) { ?>
+        <!-- actual script modules -->
+        <script type="text/javascript" src="<?php echo VENDORWEBDIR; ?>novnc/novnc/lib/vendor/promise.js"></script>
+        <script type="module" crossorigin="anonymous">
+            import RFB from '<?php echo VENDORWEBDIR; ?>novnc/novnc/core/rfb.js';
+            let rfb;
+
+            $(document).on('ready', function () {
+                $('#sendCtrlAltDelButton').on('click', function () {
+                    rfb.sendCtrlAltDel();
+                    return false;
+                });
+
+                let url = <?php echo json_encode($console->ws_url); ?>;
+                let password = <?php echo json_encode($console->vnc_password); ?>;
+
+                status('Connecting');
+
+                // Creating a new RFB object will start a new connection
+                rfb = new RFB(
+                    document.getElementById('screen'),
+                    url,
+                    {
+                        credentials: { 'password': password }
+                    }
+                );
+
+                // Add listeners to important events from the RFB module
+                rfb.addEventListener('connect', function () {
+                    status('Connected');
+                });
+                rfb.addEventListener('disconnect', function (e) {
+                    status(e.detail.clean ? 'Disconnected' : 'Something went wrong, connection is closed');
+                });
+
+                // Set parameters that can be changed on an active connection
+                rfb.viewOnly = false;
+                rfb.scaleViewport = true;
+
+                function status(text) {
+                    document.getElementById('status').textContent = text;
+                }
+            });
+        </script>
+        <div id="top_bar">
+            <div>
+                <span id="status">Loading</span>
+                <button class="btn btn-primary float-right" id="sendCtrlAltDelButton"><?php $this->_(
+                    'Solusvm2.tab_console.send_ctrlaltdel',
+                ); ?></button>
+            </div>
+        </div>
+        <div id="screen">
+            <!-- This is where the remote screen will appear -->
+        </div>
+        <?php } else { ?>
+        <p class="text-muted"><?php $this->_('Solusvm2.tab_console.text_console_unavailable'); ?></p>
+        <?php } ?>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+      $(this).blestaSetHeadTag("link", {media: "screen", type: "text/css", rel: "stylesheet", href: "<?php echo $this->Html->safe(
+          $this->view_dir . 'css/styles.css',
+      ); ?>"});
+    });
+</script>
